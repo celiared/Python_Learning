@@ -1,0 +1,79 @@
+from sklearn.datasets import fetch_lfw_people
+from sklearn.neighbors import KNeighborsClassifier
+from sklearn.model_selection import train_test_split
+from sklearn import metrics
+from sklearn.svm import SVC
+from sklearn.naive_bayes import GaussianNB
+from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier, AdaBoostClassifier
+
+# 加载flw_people数据集
+# 由于下载太慢事先将下载好的fetch_lfw_people数据集放在了sklearn的文件夹中，可以直接读取
+# 参数min_faces_per_person表示选取数据集中照片数量至少大于100的人的数据
+lfw_people = fetch_lfw_people(min_faces_per_person=100)
+
+# xs是数据集的特征，即每张图片所有像素点组成的一行数据。
+xs = lfw_people.data
+
+# ys是数据集的标签，即每张图片对应的某个人，类似于分类问题中的某一个类别值
+ys = lfw_people.target
+print(lfw_people.images.shape)
+print(len(lfw_people.target_names))
+
+# 初始化KNN分类器 n_neighbors表示判断类别时要找到的neighbors数量 algorithm为计算nearest neighbor的算法，weights表示用distance的相反数来衡量每个邻居的权重 n_job表示并行任务数量
+clf = KNeighborsClassifier(n_neighbors=20, algorithm='auto', weights='distance', n_jobs=1)
+
+# 划分数据集，0.7为训练集 0.3为测试集 随机数生成器的种子为0
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+
+# 训练模型，用训练集的特征和标签训练模型
+clf.fit(x_train, y_train)
+
+# 使用训练好的模型对测试集的标签进行预测 得到一组标签
+y_pred = clf.predict(x_test)
+
+# 将预测出的标签与实际标签进行比对，调用函数计算准确率。
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+# 初始化SVM分类器
+clf = SVC(decision_function_shape = "ovr")
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+# 初始化高斯朴素贝叶斯分类器
+clf = GaussianNB()
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+#初始化决策树分类器
+clf = DecisionTreeClassifier(max_depth=5)
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+# 初始化随机森林分类器，随机森林模型的基本思想是将决策树与bagging思想结合，即通过将数据取样多次，形成多个数据集去训练多个随机树，
+# 再将这些随机树分别预测的结果通过某种算法进行综合得出最终结果
+clf = RandomForestClassifier(max_depth=5, n_estimators=10, max_features=1)
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+# adaboost 是与bagging不同的另一种集成学习(ensemble learning)算法，与bagging不同它不是采取有放回取样而是每一次使用所有数据训练一个
+# 弱学习器，然后根据训练的结果，增加那些分错的数据的权重，减少分对的数据的权重，并得出该分类器的权重。然后将带权重的数据用于下一个弱分类器的学习
+# 最终得到一组弱分类器和它们各自的权重，对这些弱分类器的结果进行加权求和即得到了最终的强分类器
+# 本实验中 n_estimators表示需要训练的弱分类器个数，设置为1000个，learning_rate表示学习速率为0.2，速率过高可能无法收敛，速率过小可能收敛速度太慢
+clf = AdaBoostClassifier(n_estimators=1000, learning_rate=0.2)
+x_train, x_test, y_train, y_test = train_test_split(xs, ys, test_size=0.3, random_state=0)
+clf.fit(x_train, y_train)
+y_pred = clf.predict(x_test)
+print('准确率：', metrics.accuracy_score(y_test, y_pred))
+
+
+
+
